@@ -17,7 +17,7 @@ dependencies:
   firebase_storage: ^3.0.8
   firebase_messaging: ^6.0.16
   firebase_core: ^0.4.5
-  path: ^1.7.0
+  path: 1.6.4
   fluttertoast: ^4.0.1
   intl: ^0.16.1
 
