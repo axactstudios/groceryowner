@@ -944,7 +944,8 @@ class _OrdersState extends State<Orders> {
             itemBuilder: (BuildContext context, index) {
               var item = currOrders[index];
               return Container(
-                margin: const EdgeInsets.all(15.0),
+                height: 355,
+                margin: const EdgeInsets.all(7.0),
                 decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.all(
@@ -956,6 +957,7 @@ class _OrdersState extends State<Orders> {
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
                         'Date: ${item.dateTime}',
@@ -973,20 +975,69 @@ class _OrdersState extends State<Orders> {
                         'Total Amount: ${item.orderAmount}',
                         style: TextStyle(color: Colors.white),
                       ),
-                      Text(
-                        'Order Status is ${item.status}',
-                        style: TextStyle(color: Colors.white),
+                      SizedBox(
+                        height: 4,
                       ),
-                      Text(
-                        'User PhNo: ${item.phNo}',
-                        style: TextStyle(color: Colors.white),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text(
+                            'Items ordered',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          Text(
+                            'Qty ordered',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'User Address: ${item.address}',
-                        style: TextStyle(color: Colors.white),
+                      SizedBox(
+                        height: 2,
+                      ),
+                      Container(
+                        height: 85,
+                        child: ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            shrinkWrap: true,
+                            itemCount: item.itemsName.length,
+                            itemBuilder: (context, index) {
+                              return Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Container(
+                                    child: Text(
+                                      item.itemsName[index],
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      item.itemsQty[index].toString(),
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
                       ),
                       SizedBox(
                         height: 20,
+                      ),
+                      Text(
+                        'Order Status is Order ${item.status}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        'Customer\'s Phone No: ${item.phNo}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        'Customer Address: ${item.address}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(
+                        height: 37,
                       ),
                       InkWell(
                         onTap: () {
@@ -1025,6 +1076,9 @@ class _OrdersState extends State<Orders> {
                             ),
                           ),
                         ),
+                      ),
+                      SizedBox(
+                        height: 2,
                       ),
                       InkWell(
                         onTap: () {
