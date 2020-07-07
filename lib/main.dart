@@ -665,18 +665,6 @@ class _OrdersState extends State<Orders> {
     });
   }
 
-  String address;
-  void getAddress(String number) {
-    DatabaseReference addressref =
-        FirebaseDatabase.instance.reference().child('Users').child(number);
-    addressref.once().then((DataSnapshot snap) {
-      // ignore: non_constant_identifier_names
-      var DATA = snap.value;
-      address = DATA['Add1'] + ', ' + DATA['Add2'] + '-' + DATA['Zip'];
-      print(address);
-    });
-  }
-
   void getOrders(String number) {
     DatabaseReference ordersref =
         FirebaseDatabase.instance.reference().child('Orders').child(number);
@@ -688,7 +676,6 @@ class _OrdersState extends State<Orders> {
       var DATA = snap.value;
 
       for (var key in KEYS) {
-        getAddress(number);
         print('database of $number has $key');
         List<ListTile> currListTile = [];
         List<ListTile> pastListTile = [];
@@ -703,20 +690,35 @@ class _OrdersState extends State<Orders> {
           print('database of $number has $key with status not complete');
           OrderItem newOrder = OrderItem();
 
+          DatabaseReference addressref = FirebaseDatabase.instance
+              .reference()
+              .child('Users')
+              .child(number);
+          addressref.once().then((DataSnapshot snap) {
+            // ignore: non_constant_identifier_names
+            var DATA = snap.value;
+            newOrder.address =
+                DATA['Add1'] + ', ' + DATA['Add2'] + '-' + DATA['Zip'];
+            newOrder.phNo = DATA['phNo'];
+            setState(() {
+              newOrder.phNo;
+              newOrder.address;
+            });
+            print(newOrder.address);
+          });
+
+          newOrder.orderNumber = number;
+          newOrder.orderKey = key;
+          print(newOrder.orderNumber);
+          print(newOrder.orderKey);
           newOrder.orderAmount = DATA[key]['orderAmount'];
           print(newOrder.orderAmount);
           newOrder.itemsName = List<String>.from(DATA[key]['itemsName']);
           newOrder.itemsQty = List<int>.from(DATA[key]['itemsQty']);
           newOrder.dateTime = DATA[key]['DateTime'];
-          print(newOrder.dateTime);
           newOrder.completedTime = DATA[key]['CompletedTime'];
-          print(newOrder.completedTime);
           newOrder.shippedTime = DATA[key]['ShippedTime'];
           newOrder.status = DATA[key]['Status'];
-          print(newOrder.status);
-          print(newOrder.shippedTime);
-          print(newOrder.itemsQty);
-          print(newOrder.itemsName);
 
           currOrders.add(newOrder);
           setState(() {
@@ -916,9 +918,18 @@ class _OrdersState extends State<Orders> {
   }
 
   @override
+  void initState() {
+    currOrders.clear();
+    pastOrders.clear();
+    getOrderList();
+    setState(() {
+      print('All orders updated');
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
-    getOrderList();
     return Column(
       children: <Widget>[
         Text(
@@ -933,7 +944,8 @@ class _OrdersState extends State<Orders> {
             itemBuilder: (BuildContext context, index) {
               var item = currOrders[index];
               return Container(
-                margin: const EdgeInsets.all(15.0),
+                height: 355,
+                margin: const EdgeInsets.all(7.0),
                 decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.all(
@@ -945,6 +957,7 @@ class _OrdersState extends State<Orders> {
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
                         'Date: ${item.dateTime}',
@@ -962,20 +975,69 @@ class _OrdersState extends State<Orders> {
                         'Total Amount: ${item.orderAmount}',
                         style: TextStyle(color: Colors.white),
                       ),
-                      Text(
-                        'Order Status is ${item.status}',
-                        style: TextStyle(color: Colors.white),
+                      SizedBox(
+                        height: 4,
                       ),
-                      Text(
-                        'User PhNo: ',
-                        style: TextStyle(color: Colors.white),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text(
+                            'Items ordered',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          Text(
+                            'Qty ordered',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'User Address: $address',
-                        style: TextStyle(color: Colors.white),
+                      SizedBox(
+                        height: 2,
+                      ),
+                      Container(
+                        height: 85,
+                        child: ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            shrinkWrap: true,
+                            itemCount: item.itemsName.length,
+                            itemBuilder: (context, index) {
+                              return Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Container(
+                                    child: Text(
+                                      item.itemsName[index],
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      item.itemsQty[index].toString(),
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
                       ),
                       SizedBox(
                         height: 20,
+                      ),
+                      Text(
+                        'Order Status is Order ${item.status}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        'Customer\'s Phone No: ${item.phNo}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        'Customer Address: ${item.address}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(
+                        height: 37,
                       ),
                       InkWell(
                         onTap: () {
@@ -983,10 +1045,10 @@ class _OrdersState extends State<Orders> {
                               .instance
                               .reference()
                               .child('Orders')
-                              .child(globalNumber);
+                              .child(item.orderNumber);
                           item.shippedTime == "Shipped"
                               ? null
-                              : ordersref.child(globalKey).update({
+                              : ordersref.child(item.orderKey).update({
                                   "Status": "Shipped",
                                   "ShippedTime": DateFormat('dd-MM-yyyy kk:mm')
                                       .format(DateTime.now())
@@ -1015,15 +1077,18 @@ class _OrdersState extends State<Orders> {
                           ),
                         ),
                       ),
+                      SizedBox(
+                        height: 2,
+                      ),
                       InkWell(
                         onTap: () {
                           DatabaseReference ordersref = FirebaseDatabase
                               .instance
                               .reference()
                               .child('Orders')
-                              .child(globalNumber);
-                          print(globalNumber);
-                          ordersref.child(globalKey).update({
+                              .child(item.orderNumber);
+                          print(item.orderNumber);
+                          ordersref.child(item.orderKey).update({
                             "isCompleted": true,
                             "Status": "Completed",
                             "CompletedTime": DateFormat('dd-MM-yyyy kk:mm')
@@ -1244,7 +1309,14 @@ class OrderItem {
   int orderAmount;
   List<String> itemsName;
   List<int> itemsQty;
-  String dateTime, completedTime, shippedTime, status;
+  String dateTime,
+      completedTime,
+      shippedTime,
+      status,
+      orderNumber,
+      orderKey,
+      address,
+      phNo;
 
   OrderItem(
       {this.isCompleted,
@@ -1254,7 +1326,9 @@ class OrderItem {
       this.dateTime,
       this.shippedTime,
       this.completedTime,
-      this.status});
+      this.status,
+      this.orderNumber,
+      this.orderKey});
 }
 
 class Order {
